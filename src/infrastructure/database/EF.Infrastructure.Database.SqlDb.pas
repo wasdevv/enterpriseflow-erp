@@ -40,8 +40,8 @@ implementation
 
 var
   { Abrir e fechar conexão mexe em estado global do driver (carga da fbclient por contagem de
-    referências). Em paralelo, isso falhou em 1 de cada ~400 corridas com "Invalid clumplet
-    buffer structure". A serialização vale só para conectar; o trabalho no banco segue paralelo. }
+    referências). Em paralelo, isso gerou "Invalid clumplet buffer structure" e access violation.
+    A serialização vale só para conectar; o trabalho no banco segue paralelo. }
   GConnectLock: TCriticalSection;
 
 function HostWithPort(const AConfig: TDbConfig): string;
