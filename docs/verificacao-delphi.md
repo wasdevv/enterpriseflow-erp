@@ -34,7 +34,7 @@ Estas duas últimas foram testadas com 11 erros injetados de propósito, e todos
 Só isto falta para fechar o projeto. Exige uma pessoa, porque a licença é pessoal:
 
 1. Peça a [licença gratuita da edição Community](https://www.embarcadero.com/products/delphi/starter/free-download). Ela é [limitada a receita abaixo de US$ 5.000 por ano e vale por um ano](https://www.embarcadero.com/products/delphi/starter/faq). A chave chega por e-mail, e a versão atual é a 13.0 Florence.
-2. Instale pelo instalador web, marcando Delphi e Windows.
+2. Instale pelo instalador web. Na tela de licença, escolha **I already have a product serial number** e cole a chave do e-mail. Marque Delphi e a plataforma Windows.
 3. Instale um `fbclient.dll` 5.x da mesma arquitetura do executável.
 4. Compile:
    - **Com compilador de linha de comando:** `scripts/build-delphi.sh` (no WSL) ou `scripts\windows\build-delphi.ps1`. Ele acha a instalação e compila os quatro projetos.
