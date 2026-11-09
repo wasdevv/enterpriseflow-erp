@@ -1,0 +1,8 @@
+* text=auto
+*.pas text eol=crlf
+*.dpr text eol=crlf
+*.dfm text eol=crlf
+*.dproj text eol=crlf
+*.inc text eol=crlf
+*.sh text eol=lf
+*.sql text eol=lf

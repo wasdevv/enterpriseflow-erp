@@ -1,0 +1,29 @@
+# Compiladores
+*.dcu
+*.dcp
+*.drc
+*.exe
+*.identcode
+*.local
+*.map
+*.rsm
+*.tds
+*.stat
+*.o
+*.ppu
+*.a
+*.res
+*.or
+__history/
+__recovery/
+Win32/
+Win64/
+build/
+bin/
+lib/
+
+# Banco e configuracao local
+*.fdb
+*.fbk
+config/enterpriseflow.ini
+*.log
