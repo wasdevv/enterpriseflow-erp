@@ -3,7 +3,12 @@
 # suite. Requer um Firebird 5 acessivel. Variaveis: EF_TEST_DB_HOST/PORT/USER/PASSWORD/PATH.
 set -euo pipefail
 source "$(dirname "$0")/fpc-env.sh"
-"$ROOT/scripts/build-tests.sh" 2>&1 | grep -vE 'crt|Note:|APPTYPE|managed type|Warning: Local' || true
+# Falha de compilacao tem de parar aqui: seguir adiante testaria o binario antigo.
+if ! BUILD_OUTPUT="$("$ROOT/scripts/build-tests.sh" 2>&1)"; then
+  echo "$BUILD_OUTPUT" | grep -vE 'crt|Note:|APPTYPE|managed type|Warning: Local'
+  echo "Compilacao falhou." >&2
+  exit 1
+fi
 export EF_TEST_DB_HOST="${EF_TEST_DB_HOST:-127.0.0.1}"
 export EF_TEST_DB_PORT="${EF_TEST_DB_PORT:-53050}"
 export EF_TEST_DB_USER="${EF_TEST_DB_USER:-SYSDBA}"

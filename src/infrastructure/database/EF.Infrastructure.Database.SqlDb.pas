@@ -8,7 +8,7 @@
 interface
 
 uses
-  SysUtils, Classes, DB, sqldb, IBConnection,
+  SysUtils, Classes, SyncObjs, DB, sqldb, IBConnection,
   EF.Infrastructure.Database;
 
 type
@@ -38,6 +38,12 @@ function OpenFirebirdSession(const AConfig: TDbConfig): IDbSession;
 
 implementation
 
+var
+  { Abrir e fechar conexão mexe em estado global do driver (carga da fbclient por contagem de
+    referências). Em paralelo, isso falhou em 1 de cada ~400 corridas com "Invalid clumplet
+    buffer structure". A serialização vale só para conectar; o trabalho no banco segue paralelo. }
+  GConnectLock: TCriticalSection;
+
 function HostWithPort(const AConfig: TDbConfig): string;
 begin
   { Formato clássico do fbclient: host/porta:caminho }
@@ -66,7 +72,12 @@ begin
   try
     ConfigureConnection(LConnection, AConfig);
     LConnection.Params.Values['PAGE_SIZE'] := '16384';
-    LConnection.CreateDB;
+    GConnectLock.Acquire;
+    try
+      LConnection.CreateDB;
+    finally
+      GConnectLock.Release;
+    end;
   finally
     LConnection.Free;
   end;
@@ -93,14 +104,24 @@ begin
   FTransaction.Params.Add('isc_tpb_write');
   FTransaction.Params.Add('isc_tpb_wait');
   FTransaction.Params.Add('isc_tpb_lock_timeout=' + IntToStr(CLockTimeoutSeconds));
-  FConnection.Open;
+  GConnectLock.Acquire;
+  try
+    FConnection.Open;
+  finally
+    GConnectLock.Release;
+  end;
 end;
 
 destructor TSqlDbSession.Destroy;
 begin
   if FTransaction.Active then
     FTransaction.Rollback;
-  FConnection.Close;
+  GConnectLock.Acquire;
+  try
+    FConnection.Close;
+  finally
+    GConnectLock.Release;
+  end;
   FTransaction.Free;
   FConnection.Free;
   inherited;
@@ -165,6 +186,8 @@ begin
     Result.ParseSQL := False;
     Result.ReadOnly := True;
     Result.UsePrimaryKeyAsKey := False;
+    { Sem parâmetros, ":x" é variável de PSQL (EXECUTE BLOCK), não parâmetro da aplicação. }
+    Result.ParamCheck := Length(AParams) > 0;
     Result.SQL.Text := ASql;
     for LIndex := Low(AParams) to High(AParams) do
     begin
@@ -248,5 +271,11 @@ function TSqlDbSession.NextId(const ASequence: string): Int64;
 begin
   Result := Query('SELECT NEXT VALUE FOR ' + ASequence + ' AS id FROM RDB$DATABASE').Int('id');
 end;
+
+initialization
+  GConnectLock := TCriticalSection.Create;
+
+finalization
+  GConnectLock.Free;
 
 end.

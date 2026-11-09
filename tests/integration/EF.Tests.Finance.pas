@@ -252,7 +252,7 @@ begin
   LEnv := NewTestEnv;
   FInstallment := InvoicedInstallment(LEnv, '100,00', LOrder);
   LOutcomes := RunConcurrently(LEnv, 4, SettleSeventy);
-  Assert.AreEqual(1, CountOutcome(LOutcomes, ''), 'Só um pagamento de 70 cabe em 100');
+  Assert.AreEqual(1, CountOutcome(LOutcomes, ''), 'Só um pagamento de 70 cabe em 100: ' + DescribeOutcomes(LOutcomes));
   Assert.AreEqual(3, CountOutcome(LOutcomes, 'EOverpayment'));
   Assert.AreEqual('70.00', LEnv.QueryMoney('SELECT principal_paid FROM receivable_installments WHERE id = :id', [P('id', FInstallment)]));
 end;

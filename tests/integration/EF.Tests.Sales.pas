@@ -128,7 +128,7 @@ begin
   LEnv.AddStock(FProduct, FWarehouse, '10');
   FKey := LEnv.Key;
   LOutcomes := RunConcurrently(LEnv, 6, ConfirmSameKey);
-  Assert.AreEqual(6, CountOutcome(LOutcomes, ''), 'Todos recebem o mesmo pedido, sem erro');
+  Assert.AreEqual(6, CountOutcome(LOutcomes, ''), 'Todos recebem o mesmo pedido, sem erro: ' + DescribeOutcomes(LOutcomes));
   Assert.AreEqual(1, LEnv.CountRows('SELECT id FROM sales_orders WHERE idempotency_key = :k', [P('k', FKey)]));
   Assert.AreEqual('10/1', LEnv.Balance(FProduct, FWarehouse));
 end;
@@ -217,7 +217,7 @@ begin
   FOrder := LEnv.App.Sales.ConfirmNew(OrderCommand(LEnv.NewCustomer, [Line(FProduct, FWarehouse, '2')], LEnv.Key)).OrderId;
   LOutcomes := RunConcurrently(LEnv, 5, CancelOrder);
   Assert.AreEqual(1, CountOutcome(LOutcomes, ''), 'Um cancela');
-  Assert.AreEqual(4, CountOutcome(LOutcomes, 'EInvalidTransition'), 'Os outros veem o pedido já cancelado');
+  Assert.AreEqual(4, CountOutcome(LOutcomes, 'EInvalidTransition'), 'Os outros veem o pedido já cancelado: ' + DescribeOutcomes(LOutcomes));
   Assert.AreEqual('5/2', LEnv.Balance(FProduct, FWarehouse), 'Só a reserva deste pedido volta, e uma vez');
 end;
 
@@ -401,7 +401,7 @@ begin
     LEnv.AddStock(FProducts[LIndex], FWarehouse, '5');
   end;
   LOutcomes := RunConcurrently(LEnv, Length(FProducts), ConfirmWithinLimit);
-  Assert.AreEqual(1, CountOutcome(LOutcomes, ''), 'Só uma venda cabe no limite');
+  Assert.AreEqual(1, CountOutcome(LOutcomes, ''), 'Só uma venda cabe no limite: ' + DescribeOutcomes(LOutcomes));
   Assert.AreEqual(5, CountOutcome(LOutcomes, 'ECreditLimitExceeded'));
 end;
 

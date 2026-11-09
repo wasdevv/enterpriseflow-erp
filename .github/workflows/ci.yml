@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    # Sem licenca de Delphi em CI: compila dominio, aplicacao, SQL e telas com Free Pascal e
+    # LCL. O que so existe em Delphi esta em docs/verificacao-delphi.md.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      EF_TEST_DB_PATH: /home/runner/.local/share/enterpriseflow-fb/test.fdb
+      EF_DB_PATH: /home/runner/.local/share/enterpriseflow-fb/ui.fdb
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar compilador, LCL e Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fpc lcl lcl-gtk2 libgtk2.0-dev xvfb libtommath1
+      - name: Conferir BOM dos fontes com acento
+        run: ./scripts/normalize-sources.py --check
+      - name: Subir Firebird 5
+        run: |
+          ./scripts/setup-firebird.sh
+          echo "LD_LIBRARY_PATH=$HOME/.local/firebird-5/opt/firebird/lib" >> "$GITHUB_ENV"
+      - name: Testes unitarios e de integracao (locale C, como pior caso de acentuacao)
+        env:
+          LC_ALL: C
+          LANG: C
+        run: ./scripts/test.sh
+      - name: Roteiro ponta a ponta nas telas (LCL em Xvfb)
+        run: ./scripts/ui-smoke.sh "$RUNNER_TEMP/capturas"
+      - name: Guardar capturas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-lcl
+          path: ${{ runner.temp }}/capturas
+          if-no-files-found: ignore
+
+  compose:
+    # Confere que o docker-compose do repositorio sobe um Firebird onde as migrations rodam.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar compilador e cliente Firebird
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fpc libfbclient2 firebird-dev
+      - name: Subir servicos
+        run: docker compose up -d --wait firebird
+      - name: Migrar e popular banco no container
+        env:
+          EF_DB_HOST: 127.0.0.1
+          EF_DB_PORT: "3050"
+          EF_DB_USER: SYSDBA
+          EF_DB_PASSWORD: masterkey
+          EF_DB_PATH: /var/lib/firebird/data/enterpriseflow.fdb
+          EF_MIGRATIONS_DIR: database/migrations
+        run: |
+          source scripts/fpc-env.sh
+          "$FPC_BIN" "${EF_FPC_FLAGS[@]}" tools/efmigrate.dpr
+          "$BUILD/efmigrate" create
+          "$BUILD/efmigrate" migrate
+          "$BUILD/efmigrate" seed database/seeds/001_demo.sql

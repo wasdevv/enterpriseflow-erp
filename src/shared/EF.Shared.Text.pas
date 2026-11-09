@@ -28,8 +28,13 @@ function RedactSecrets(const AText: string): string;
 function NewCorrelationId: string;
 function IsoTimestamp(const AValue: TDateTime): string;
 function IsoDate(const AValue: TDateTime): string;
+{ Sem depender do locale da máquina: sempre dd/mm/aaaa. }
+function ParseBrazilianDate(const AText: string): TDateTime;
 
 implementation
+
+uses
+  EF.Domain.Exceptions;
 
 function JsonEscape(const AValue: string): string;
 var
@@ -158,6 +163,21 @@ end;
 function IsoDate(const AValue: TDateTime): string;
 begin
   Result := FormatDateTime('yyyy"-"mm"-"dd', AValue);
+end;
+
+function ParseBrazilianDate(const AText: string): TDateTime;
+var
+  LText: string;
+  LDay, LMonth, LYear: Integer;
+begin
+  LText := Trim(AText);
+  if (Length(LText) <> 10) or (LText[3] <> '/') or (LText[6] <> '/') then
+    raise EValidationError.CreateFmt('Data inválida: "%s". Use dd/mm/aaaa.', [AText]);
+  LDay := StrToIntDef(Copy(LText, 1, 2), 0);
+  LMonth := StrToIntDef(Copy(LText, 4, 2), 0);
+  LYear := StrToIntDef(Copy(LText, 7, 4), 0);
+  if not TryEncodeDate(LYear, LMonth, LDay, Result) then
+    raise EValidationError.CreateFmt('Data inválida: "%s". Use dd/mm/aaaa.', [AText]);
 end;
 
 {$IFDEF FPC}

@@ -1,0 +1,17 @@
+; Copie para config/enterpriseflow.ini (fora do Git) ou para o lado do executavel.
+; Variaveis de ambiente EF_DB_* e EF_API_* tem prioridade sobre este arquivo.
+[database]
+host=127.0.0.1
+port=3050
+; Caminho do banco NO SERVIDOR. Com o docker-compose deste repositorio: /var/lib/firebird/data/enterpriseflow.fdb
+path=C:\dados\enterpriseflow.fdb
+user=SYSDBA
+; Sem valor padrao de proposito: defina aqui ou em EF_DB_PASSWORD.
+password=
+
+[integration]
+base_url=http://127.0.0.1:8765
+timeout_ms=5000
+
+[logging]
+path=enterpriseflow.log

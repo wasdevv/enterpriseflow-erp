@@ -23,6 +23,8 @@ type
     function Locations(const AWarehouseId: Int64): TDataTable;
     function Categories: TDataTable;
     function Units: TDataTable;
+    function Users: TDataTable;
+    function Roles: TDataTable;
     function StockBalances(const ASearch: string): TDataTable;
     function LowStock: TDataTable;
     function Kardex(const AProductId, AWarehouseId: Int64): TDataTable;
@@ -146,6 +148,20 @@ begin
   Result := Run('SELECT code AS "Código", name AS "Unidade", allows_fraction AS "Fracionável" FROM units ORDER BY code');
 end;
 
+function TReadModel.Users: TDataTable;
+begin
+  { Nunca seleciona hash nem salt: a tela não precisa, então a consulta não traz. }
+  Result := Run(
+    'SELECT u.id AS ID, u.username AS "Login", u.full_name AS "Nome", u.is_active AS "Ativo", ' +
+    '(SELECT LIST(r.code, '', '') FROM user_roles ur JOIN roles r ON r.id = ur.role_id WHERE ur.user_id = u.id) AS "Perfis" ' +
+    'FROM users u ORDER BY u.username');
+end;
+
+function TReadModel.Roles: TDataTable;
+begin
+  Result := Run('SELECT id AS ID, code AS "Perfil" FROM roles ORDER BY code');
+end;
+
 function TReadModel.StockBalances(const ASearch: string): TDataTable;
 begin
   Result := Run(
@@ -202,13 +218,17 @@ begin
 end;
 
 function TReadModel.SalesOrders(const AStatus: string): TDataTable;
-begin
-  Result := Run(
+const
+  CSelect =
     'SELECT FIRST 500 o.id AS ID, o.id AS "Pedido", c.name AS "Cliente", o.status AS "Status", o.total AS "Total", ' +
     'o.installments AS "Parcelas", u.username AS "Vendedor", o.updated_at AS "Atualizado" ' +
-    'FROM sales_orders o JOIN customers c ON c.id = o.customer_id JOIN users u ON u.id = o.seller_id ' +
-    'WHERE (CAST(:status AS VARCHAR(10)) = '''' OR o.status = :status) ORDER BY o.updated_at DESC',
-    [P('status', AStatus)]);
+    'FROM sales_orders o JOIN customers c ON c.id = o.customer_id JOIN users u ON u.id = o.seller_id ';
+begin
+  { WHERE só com filtro: "(:p = '' OR status = :p)" impediria o uso do índice (docs/performance.md). }
+  if AStatus = '' then
+    Result := Run(CSelect + 'ORDER BY o.updated_at DESC')
+  else
+    Result := Run(CSelect + 'WHERE o.status = :status ORDER BY o.updated_at DESC', [P('status', AStatus)]);
 end;
 
 function TReadModel.SalesOrderItems(const AOrderId: Int64): TDataTable;
@@ -310,13 +330,17 @@ begin
 end;
 
 function TReadModel.AuditTrail(const AEntityType: string; const AEntityId: Int64): TDataTable;
-begin
-  Result := Run(
+const
+  CSelect =
     'SELECT FIRST 500 a.occurred_at AS "Data", a.action AS "Ação", a.entity_type AS "Entidade", a.entity_id AS "Nº", u.username AS "Usuário", ' +
     'a.correlation_id AS "Correlação", CAST(SUBSTRING(a.details FROM 1 FOR 500) AS VARCHAR(500) CHARACTER SET UTF8) AS "Detalhes" ' +
-    'FROM audit_events a LEFT JOIN users u ON u.id = a.user_id ' +
-    'WHERE (CAST(:entity_type AS VARCHAR(30)) = '''' OR a.entity_type = :entity_type) AND (CAST(:entity_id AS BIGINT) = 0 OR a.entity_id = :entity_id) ORDER BY a.id DESC',
-    [P('entity_type', AEntityType), P('entity_id', AEntityId)]);
+    'FROM audit_events a LEFT JOIN users u ON u.id = a.user_id ';
+begin
+  if AEntityType = '' then
+    Result := Run(CSelect + 'ORDER BY a.id DESC')
+  else
+    Result := Run(CSelect + 'WHERE a.entity_type = :entity_type AND a.entity_id = :entity_id ORDER BY a.id DESC',
+      [P('entity_type', AEntityType), P('entity_id', AEntityId)]);
 end;
 
 function TReadModel.MetricsSummary: TDataTable;

@@ -65,6 +65,7 @@ type
   TTextTests = class(TObject)
   published
     procedure SourceLiteralsAreUtf8;
+    procedure BrazilianDateParsesAndRejects;
     procedure JsonEscapesControlCharsAndQuotes;
     procedure JsonBuilderProducesValidObject;
     procedure RedactionMasksSensitiveJsonFields;
@@ -495,6 +496,27 @@ begin
 end;
 
 { TTextTests }
+
+procedure TTextTests.BrazilianDateParsesAndRejects;
+const
+  CBad: array [0 .. 4] of string = ('31/02/2026', '2026-01-01', '1/1/2026', '', 'aa/bb/cccc');
+var
+  LIndex: Integer;
+  LRaised: Boolean;
+begin
+  Assert.IsTrue(ParseBrazilianDate('05/03/2026') = EncodeDate(2026, 3, 5), 'Dia antes do mês');
+  for LIndex := Low(CBad) to High(CBad) do
+  begin
+    LRaised := False;
+    try
+      ParseBrazilianDate(CBad[LIndex]);
+    except
+      on EValidationError do
+        LRaised := True;
+    end;
+    Assert.IsTrue(LRaised, 'Deveria recusar: ' + CBad[LIndex]);
+  end;
+end;
 
 procedure TTextTests.SourceLiteralsAreUtf8;
 begin

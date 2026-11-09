@@ -325,6 +325,8 @@ type
     function Locations(const AWarehouseId: Int64): TDataTable;
     function Categories: TDataTable;
     function Units: TDataTable;
+    function Users: TDataTable;
+    function Roles: TDataTable;
     function StockBalances(const ASearch: string): TDataTable;
     function LowStock: TDataTable;
     function Kardex(const AProductId, AWarehouseId: Int64): TDataTable;

@@ -1,0 +1,26 @@
+# Firebird para desenvolvimento. A aplicacao VCL continua rodando no Windows.
+services:
+  firebird:
+    image: firebirdsql/firebird:5.0.4
+    environment:
+      FIREBIRD_ROOT_PASSWORD: ${EF_DB_PASSWORD:-masterkey}
+    ports:
+      - "${EF_DB_PORT:-3050}:3050"
+    volumes:
+      - firebird-data:/var/lib/firebird/data
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/3050'"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  fiscal-api:
+    image: python:3.12-alpine
+    command: ["python", "/app/mock_fiscal_api.py", "--host", "0.0.0.0", "--port", "8765"]
+    volumes:
+      - ./tools/mock_fiscal_api.py:/app/mock_fiscal_api.py:ro
+    ports:
+      - "8765:8765"
+
+volumes:
+  firebird-data:

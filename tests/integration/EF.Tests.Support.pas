@@ -51,6 +51,8 @@ function OrderCommand(const ACustomerId: Int64; const ALines: array of TOrderLin
 { Roda AWork em N threads, cada uma com conexão própria, soltas ao mesmo tempo. }
 function RunConcurrently(const AEnv: ITestEnv; const ACount: Integer; const AWork: TThreadWork): TThreadOutcomes;
 function CountOutcome(const AOutcomes: TThreadOutcomes; const AClassName: string): Integer;
+{ Lista os resultados para a mensagem de falha: "quem falhou como" é o que explica uma corrida. }
+function DescribeOutcomes(const AOutcomes: TThreadOutcomes): string;
 { Pedido em SHIPPED: pronto para faturar. }
 function ShippedOrder(const AEnv: ITestEnv; const ATotalPrice: string; const AInstallments: Integer = 1): Int64;
 function FirstInstallmentOf(const AEnv: ITestEnv; const AOrderId: Int64): Int64;
@@ -59,7 +61,7 @@ implementation
 
 uses
   EF.Infrastructure.Config, EF.Infrastructure.Database.Driver,
-  EF.Infrastructure.UnitOfWork, EF.Application.Inventory,
+  EF.Infrastructure.UnitOfWork, EF.Application.Inventory, EF.Domain.Exceptions,
   EF.Shared.Text;
 
 type
@@ -464,6 +466,9 @@ begin
     on E: Exception do
     begin
       Outcome := E.ClassName;
+      { Erro de negócio é resultado esperado de uma corrida. O resto precisa aparecer inteiro. }
+      if not (E is EDomainError) then
+        WriteLn(ErrOutput, 'Erro inesperado na thread ', FIndex, ': ', E.ClassName, ': ', E.Message);
       FReady.SetEvent;
     end;
   end;
@@ -513,6 +518,20 @@ begin
   for LIndex := 0 to High(AOutcomes) do
     if AOutcomes[LIndex] = AClassName then
       Inc(Result);
+end;
+
+function DescribeOutcomes(const AOutcomes: TThreadOutcomes): string;
+var
+  LIndex: Integer;
+begin
+  Result := '';
+  for LIndex := 0 to High(AOutcomes) do
+  begin
+    if AOutcomes[LIndex] = '' then
+      Result := Result + 'sucesso '
+    else
+      Result := Result + AOutcomes[LIndex] + ' ';
+  end;
 end;
 
 function ShippedOrder(const AEnv: ITestEnv; const ATotalPrice: string; const AInstallments: Integer): Int64;

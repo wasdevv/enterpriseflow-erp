@@ -14,11 +14,14 @@ type
     procedure SplitRespectsStringsCommentsAndSetTerm;
     procedure EditedMigrationIsRefused;
     procedure RunningTwiceAppliesNothing;
+    procedure ScriptWithPsqlVariablesRuns;
   end;
 
   TAuthTests = class(TObject)
   published
     procedure ValidCredentialsLoadPermissions;
+    procedure AdminRoleGrantsEveryPermissionExactly;
+    procedure PermissionCodesHaveNoPadding;
     procedure WrongPasswordAndUnknownUserGiveSameMessage;
     procedure FifthFailureLocksAndLockExpires;
     procedure SuccessfulLoginClearsFailures;
@@ -166,6 +169,47 @@ begin
   end;
 end;
 
+procedure TMigratorTests.ScriptWithPsqlVariablesRuns;
+var
+  LEnv: ITestEnv;
+  LConfig: TDbConfig;
+  LDir: string;
+  LMigrator: TMigrator;
+  LSession: IDbSession;
+  LCount: string;
+begin
+  { ":i" aqui é variável do bloco. Se o driver tratar como parâmetro, o script quebra. }
+  LEnv := NewTestEnv;
+  LConfig := FreshDatabaseConfig(LEnv);
+  try
+    LDir := TempDir;
+    WriteText(LDir + PathDelim + '001_a.sql',
+      'CREATE TABLE t_a (id INTEGER);'#10 +
+      'SET TERM ^ ;'#10 +
+      'EXECUTE BLOCK AS DECLARE i INTEGER = 1; BEGIN WHILE (i <= 3) DO BEGIN INSERT INTO t_a (id) VALUES (:i); i = i + 1; END END^'#10 +
+      'SET TERM ; ^'#10);
+    LSession := OpenSession(LConfig);
+    LMigrator := TMigrator.Create(LSession);
+    try
+      Assert.AreEqual(1, LMigrator.Migrate(LDir));
+    finally
+      LMigrator.Free;
+    end;
+    LSession.StartTransaction;
+    try
+      LCount := IntToStr(LSession.Query('SELECT COUNT(*) AS n FROM t_a').Int('n'));
+      LSession.Commit;
+    except
+      LSession.Rollback;
+      raise;
+    end;
+    Assert.AreEqual('3', LCount);
+    LSession := nil;
+  finally
+    DeleteFile(LConfig.Database);
+  end;
+end;
+
 function RegisterUser(const AEnv: ITestEnv; const APassword: string): string;
 begin
   Result := 'login' + Copy(NewCorrelationId, 1, 20);
@@ -212,6 +256,38 @@ begin
   Assert.IsTrue(LContext.Has(PermOrderConfirm), 'Papel VENDAS confirma pedido');
   Assert.IsFalse(LContext.Has(PermReceivableReverse), 'Papel VENDAS não estorna');
   Assert.IsFalse(LContext.Has(PermStockAdjustApprove), 'Papel VENDAS não aprova ajuste');
+end;
+
+procedure TAuthTests.AdminRoleGrantsEveryPermissionExactly;
+var
+  LEnv: ITestEnv;
+  LUser: string;
+  LAuth: TAuthService;
+  LContext: TUserContext;
+  LAll: TTextArray;
+  LIndex: Integer;
+begin
+  LEnv := NewTestEnv;
+  LUser := 'adm' + Copy(NewCorrelationId, 1, 20);
+  LEnv.App.Auth.CreateUser(LEnv.App.Context, LUser, 'Administração', 'senha-forte-1', ['ADMIN']);
+  LAuth := TAuthService.Create(NewAuthUow(LEnv.App.Session), LEnv.App.Clock);
+  try
+    LContext := LAuth.Login(LUser, 'senha-forte-1');
+  finally
+    LAuth.Free;
+  end;
+  LAll := AllPermissions;
+  for LIndex := 0 to High(LAll) do
+    Assert.IsTrue(LContext.Has(LAll[LIndex]), 'ADMIN sem a permissão ' + LAll[LIndex]);
+end;
+
+procedure TAuthTests.PermissionCodesHaveNoPadding;
+var
+  LEnv: ITestEnv;
+begin
+  { O banco ignora espaço à direita ao comparar, então esta falha só aparece no aplicativo. }
+  LEnv := NewTestEnv;
+  Assert.AreEqual(0, LEnv.CountRows('SELECT permission_code FROM role_permissions WHERE CHAR_LENGTH(permission_code) <> CHAR_LENGTH(TRIM(permission_code))', []));
 end;
 
 procedure TAuthTests.WrongPasswordAndUnknownUserGiveSameMessage;
@@ -429,6 +505,8 @@ begin
   LModel.Warehouses;
   LModel.Locations(1);
   LModel.Categories;
+  Assert.IsTrue(Length(LModel.Roles.Rows) >= 5);
+  LModel.Users;
   Assert.IsTrue(Length(LModel.Units.Rows) >= 4);
   LModel.StockBalances('');
   LModel.LowStock;

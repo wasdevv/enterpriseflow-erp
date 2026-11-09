@@ -1,0 +1,162 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{088591CC-B055-5028-92E1-5DD49FEFBB55}</ProjectGuid>
+        <ProjectVersion>20.1</ProjectVersion>
+        <FrameworkType>VCL</FrameworkType>
+        <MainSource>EnterpriseFlow.dpr</MainSource>
+        <Base>True</Base>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <TargetedPlatforms>3</TargetedPlatforms>
+        <AppType>Application</AppType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
+        <Cfg_2>true</Cfg_2>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_UnitSearchPath>src\shared;src\shared\logging;src\shared\validation;src\domain\exceptions;src\domain\valueobjects;src\domain\entities;src\domain\rules;src\application;src\application\services;src\infrastructure;src\infrastructure\database;src\infrastructure\repositories;src\infrastructure\integrations;src\infrastructure\reporting;src\presentation;src\presentation\forms;src\presentation\frames;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_IncludePath>src\shared;$(DCC_IncludePath)</DCC_IncludePath>
+        <DCC_DcuOutput>build\$(Platform)\$(Config)\dcu</DCC_DcuOutput>
+        <DCC_ExeOutput>build\$(Platform)\$(Config)</DCC_ExeOutput>
+        <DCC_E>false</DCC_E>
+        <DCC_F>false</DCC_F>
+        <DCC_K>false</DCC_K>
+        <DCC_N>false</DCC_N>
+        <DCC_S>false</DCC_S>
+        <VerInfo_Locale>1046</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
+        <DCC_Optimize>false</DCC_Optimize>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+        <DCC_DebugInformation>0</DCC_DebugInformation>
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+    </PropertyGroup>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+        <DCCReference Include="src\application\EF.Application.Ports.pas"/>
+        <DCCReference Include="src\application\services\EF.Application.Base.pas"/>
+        <DCCReference Include="src\application\services\EF.Application.Catalog.pas"/>
+        <DCCReference Include="src\application\services\EF.Application.Finance.pas"/>
+        <DCCReference Include="src\application\services\EF.Application.Inventory.pas"/>
+        <DCCReference Include="src\application\services\EF.Application.Outbox.pas"/>
+        <DCCReference Include="src\application\services\EF.Application.Sales.pas"/>
+        <DCCReference Include="src\application\services\EF.Application.StockLedger.pas"/>
+        <DCCReference Include="src\domain\entities\EF.Domain.Receivables.pas"/>
+        <DCCReference Include="src\domain\entities\EF.Domain.Stock.pas"/>
+        <DCCReference Include="src\domain\exceptions\EF.Domain.Exceptions.pas"/>
+        <DCCReference Include="src\domain\rules\EF.Domain.OrderState.pas"/>
+        <DCCReference Include="src\domain\rules\EF.Domain.Policies.pas"/>
+        <DCCReference Include="src\domain\valueobjects\EF.Domain.Money.pas"/>
+        <DCCReference Include="src\domain\valueobjects\EF.Domain.Quantity.pas"/>
+        <DCCReference Include="src\infrastructure\EF.Infrastructure.Composition.pas"/>
+        <DCCReference Include="src\infrastructure\EF.Infrastructure.Config.pas"/>
+        <DCCReference Include="src\infrastructure\EF.Infrastructure.OutboxThread.pas"/>
+        <DCCReference Include="src\infrastructure\database\EF.Infrastructure.Database.Driver.pas"/>
+        <DCCReference Include="src\infrastructure\database\EF.Infrastructure.Database.FireDAC.pas"/>
+        <DCCReference Include="src\infrastructure\database\EF.Infrastructure.Database.Migrator.pas"/>
+        <DCCReference Include="src\infrastructure\database\EF.Infrastructure.Database.pas"/>
+        <DCCReference Include="src\infrastructure\integrations\EF.Infrastructure.Http.Net.pas"/>
+        <DCCReference Include="src\infrastructure\integrations\EF.Infrastructure.Http.pas"/>
+        <DCCReference Include="src\infrastructure\reporting\EF.Infrastructure.Reporting.pas"/>
+        <DCCReference Include="src\infrastructure\repositories\EF.Infrastructure.Repositories.Sales.pas"/>
+        <DCCReference Include="src\infrastructure\repositories\EF.Infrastructure.Repositories.Stock.pas"/>
+        <DCCReference Include="src\infrastructure\repositories\EF.Infrastructure.Repositories.Support.pas"/>
+        <DCCReference Include="src\infrastructure\repositories\EF.Infrastructure.UnitOfWork.pas"/>
+        <DCCReference Include="src\presentation\EF.Presentation.Bootstrap.pas"/>
+        <DCCReference Include="src\presentation\EF.Presentation.Common.pas"/>
+        <DCCReference Include="src\presentation\forms\EF.Presentation.Fields.pas">
+            <Form>FieldsDialog</Form>
+        </DCCReference>
+        <DCCReference Include="src\presentation\forms\EF.Presentation.Lines.pas">
+            <Form>LinesForm</Form>
+        </DCCReference>
+        <DCCReference Include="src\presentation\forms\EF.Presentation.Login.pas">
+            <Form>LoginForm</Form>
+        </DCCReference>
+        <DCCReference Include="src\presentation\forms\EF.Presentation.Main.pas">
+            <Form>MainForm</Form>
+        </DCCReference>
+        <DCCReference Include="src\presentation\forms\EF.Presentation.TableView.pas">
+            <Form>TableViewForm</Form>
+        </DCCReference>
+        <DCCReference Include="src\presentation\frames\EF.Presentation.CatalogFrame.pas">
+            <Form>CatalogFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\presentation\frames\EF.Presentation.FinanceFrame.pas">
+            <Form>FinanceFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\presentation\frames\EF.Presentation.IntegrationFrame.pas">
+            <Form>IntegrationFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\presentation\frames\EF.Presentation.PurchasesFrame.pas">
+            <Form>PurchasesFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\presentation\frames\EF.Presentation.ReportsFrame.pas">
+            <Form>ReportsFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\presentation\frames\EF.Presentation.SalesFrame.pas">
+            <Form>SalesFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\presentation\frames\EF.Presentation.StockFrame.pas">
+            <Form>StockFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\shared\EF.Shared.Crypto.pas"/>
+        <DCCReference Include="src\shared\EF.Shared.Text.pas"/>
+        <DCCReference Include="src\shared\logging\EF.Shared.Logging.pas"/>
+        <DCCReference Include="src\shared\validation\EF.Shared.Documents.pas"/>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Delphi.Personality.12</Borland.Personality>
+        <Borland.ProjectType>Application</Borland.ProjectType>
+        <BorlandProject>
+            <Delphi.Personality>
+                <Source>
+                    <Source Name="MainSource">EnterpriseFlow.dpr</Source>
+                </Source>
+            </Delphi.Personality>
+            <Platforms>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">True</Platform>
+            </Platforms>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+</Project>

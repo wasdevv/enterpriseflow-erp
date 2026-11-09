@@ -11,6 +11,8 @@ uses
 type
   TCatalogService = class(TServiceBase)
   public
+    function GetProduct(const AId: Int64): TProductRecord;
+    function GetCustomer(const AId: Int64): TCustomerRecord;
     function SaveProduct(const AProduct: TProductRecord): Int64;
     function SaveCustomer(const ACustomer: TCustomerRecord): Int64;
     function SaveParty(const AParty: TPartyRecord): Int64;
@@ -41,6 +43,32 @@ implementation
 uses
   EF.Domain.Exceptions,
   EF.Shared.Crypto, EF.Shared.Documents, EF.Shared.Text;
+
+function TCatalogService.GetProduct(const AId: Int64): TProductRecord;
+begin
+  FUow.StartTransaction;
+  try
+    if not FUow.Catalog.ReadProduct(AId, Result) then
+      raise ENotFound.CreateFmt('Produto %d não encontrado.', [AId]);
+    FUow.Commit;
+  except
+    FUow.Rollback;
+    raise;
+  end;
+end;
+
+function TCatalogService.GetCustomer(const AId: Int64): TCustomerRecord;
+begin
+  FUow.StartTransaction;
+  try
+    if not FUow.Catalog.ReadCustomer(AId, Result) then
+      raise ENotFound.CreateFmt('Cliente %d não encontrado.', [AId]);
+    FUow.Commit;
+  except
+    FUow.Rollback;
+    raise;
+  end;
+end;
 
 function TCatalogService.SaveProduct(const AProduct: TProductRecord): Int64;
 var

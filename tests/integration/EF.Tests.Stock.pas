@@ -114,8 +114,8 @@ begin
     FCustomer := FEnv.NewCustomer;
     FEnv.AddStock(FProductA, FWarehouseA, '1');
     LOutcomes := RunConcurrently(FEnv, 8, ConfirmLastUnit);
-    Assert.AreEqual(1, CountOutcome(LOutcomes, ''), 'Exatamente um vencedor');
-    Assert.AreEqual(7, CountOutcome(LOutcomes, 'EInsufficientStock'), 'Os outros recebem recusa clara');
+    Assert.AreEqual(1, CountOutcome(LOutcomes, ''), 'Exatamente um vencedor: ' + DescribeOutcomes(LOutcomes));
+    Assert.AreEqual(7, CountOutcome(LOutcomes, 'EInsufficientStock'), 'Os outros recebem recusa clara: ' + DescribeOutcomes(LOutcomes));
     Assert.AreEqual('1/1', FEnv.Balance(FProductA, FWarehouseA));
     Assert.AreEqual(1, FEnv.CountRows('SELECT id FROM stock_reservations WHERE product_id = :p', [P('p', FProductA)]));
   finally

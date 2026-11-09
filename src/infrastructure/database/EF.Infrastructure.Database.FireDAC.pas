@@ -183,6 +183,8 @@ begin
     Result.ResourceOptions.MacroCreate := False;
     Result.ResourceOptions.MacroExpand := False;
     Result.ResourceOptions.EscapeExpand := False;
+    { Sem parâmetros, ":x" é variável de PSQL (EXECUTE BLOCK), não parâmetro da aplicação. }
+    Result.ResourceOptions.ParamCreate := Length(AParams) > 0;
     Result.FetchOptions.Unidirectional := True;
     Result.SQL.Text := ASql;
     for LIndex := Low(AParams) to High(AParams) do
