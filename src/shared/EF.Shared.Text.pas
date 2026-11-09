@@ -160,4 +160,12 @@ begin
   Result := FormatDateTime('yyyy"-"mm"-"dd', AValue);
 end;
 
+{$IFDEF FPC}
+initialization
+  { Em Free Pascal, string é AnsiString: sem isto, literal com acento vira "?" em CI, onde
+    o locale costuma ser C. Em Delphi, string já é UTF-16. }
+  SetMultiByteConversionCodePage(CP_UTF8);
+  SetMultiByteRTLFileSystemCodePage(CP_UTF8);
+{$ENDIF}
+
 end.

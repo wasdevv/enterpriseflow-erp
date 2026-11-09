@@ -91,7 +91,7 @@ begin
   {$IFDEF EF_RESTORE_R}{$R+}{$UNDEF EF_RESTORE_R}{$ENDIF}
 end;
 
-function Sha256(const AData: RawByteString): TBytes32;
+function Sha256(const AData: TBytes): TBytes32;
 var
   LState: TShaState;
   LBlock: array [0 .. 63] of Byte;
@@ -103,13 +103,13 @@ begin
   LOffset := 0;
   while LLength - LOffset >= 64 do
   begin
-    ProcessBlock(LState, PByte(PAnsiChar(AData) + LOffset));
+    ProcessBlock(LState, @AData[LOffset]);
     Inc(LOffset, 64);
   end;
   FillChar(LBlock, SizeOf(LBlock), 0);
   LRemaining := LLength - LOffset;
   if LRemaining > 0 then
-    Move((PAnsiChar(AData) + LOffset)^, LBlock[0], LRemaining);
+    Move(AData[LOffset], LBlock[0], LRemaining);
   LBlock[LRemaining] := $80;
   if LRemaining >= 56 then
   begin
@@ -129,73 +129,91 @@ begin
   end;
 end;
 
-function DigestToRaw(const ADigest: TBytes32): RawByteString;
+{ Bytes, nunca RawByteString: o Delphi converte codepage ao concatenar strings de codepages
+  diferentes, o que corromperia dados binários em silêncio. }
+function RawToBytes(const AData: RawByteString): TBytes;
 begin
-  SetLength(Result, 32);
-  Move(ADigest[0], Result[1], 32);
+  SetLength(Result, Length(AData));
+  if Length(AData) > 0 then
+    Move(AData[1], Result[0], Length(AData));
 end;
 
-function BytesToHex(const ADigest: TBytes32): string;
+function Concat2(const A, B: TBytes): TBytes;
+begin
+  SetLength(Result, Length(A) + Length(B));
+  if Length(A) > 0 then
+    Move(A[0], Result[0], Length(A));
+  if Length(B) > 0 then
+    Move(B[0], Result[Length(A)], Length(B));
+end;
+
+function DigestToBytes(const ADigest: TBytes32): TBytes;
+begin
+  SetLength(Result, 32);
+  Move(ADigest[0], Result[0], 32);
+end;
+
+function DigestToHex(const ADigest: TBytes32): string;
 var
   I: Integer;
 begin
   Result := '';
   for I := 0 to 31 do
-    Result := Result + LowerCase(IntToHex(ADigest[I], 2));
+    Result := Result + LowerCase(IntToHex(Integer(ADigest[I]), 2));
 end;
 
 function Sha256Hex(const AData: RawByteString): string;
 begin
-  Result := BytesToHex(Sha256(AData));
+  Result := DigestToHex(Sha256(RawToBytes(AData)));
 end;
 
-function HmacSha256(const AKey, AMessage: RawByteString): TBytes32;
+function HmacSha256(const AKey, AMessage: TBytes): TBytes32;
 var
-  LKey, LInner, LOuter: RawByteString;
+  LKey, LInner, LOuter: TBytes;
   I: Integer;
 begin
   LKey := AKey;
   if Length(LKey) > 64 then
-    LKey := DigestToRaw(Sha256(LKey));
+    LKey := DigestToBytes(Sha256(LKey));
   SetLength(LInner, 64);
   SetLength(LOuter, 64);
-  for I := 1 to 64 do
-  begin
-    if I <= Length(LKey) then
+  for I := 0 to 63 do
+    if I < Length(LKey) then
     begin
-      LInner[I] := AnsiChar(Ord(LKey[I]) xor $36);
-      LOuter[I] := AnsiChar(Ord(LKey[I]) xor $5C);
+      LInner[I] := LKey[I] xor $36;
+      LOuter[I] := LKey[I] xor $5C;
     end
     else
     begin
-      LInner[I] := AnsiChar($36);
-      LOuter[I] := AnsiChar($5C);
+      LInner[I] := $36;
+      LOuter[I] := $5C;
     end;
-  end;
-  Result := Sha256(LOuter + DigestToRaw(Sha256(LInner + AMessage)));
+  Result := Sha256(Concat2(LOuter, DigestToBytes(Sha256(Concat2(LInner, AMessage)))));
 end;
 
 function Pbkdf2Sha256Hex(const APassword, ASalt: RawByteString; const AIterations: Integer): string;
 var
   LBlock, LU: TBytes32;
-  LCounter: RawByteString;
+  LPassword, LFirst: TBytes;
   I, J: Integer;
 begin
   { Bloco único: 32 bytes de saída, o tamanho de um digest. }
-  SetLength(LCounter, 4);
-  LCounter[1] := AnsiChar(0);
-  LCounter[2] := AnsiChar(0);
-  LCounter[3] := AnsiChar(0);
-  LCounter[4] := AnsiChar(1);
-  LU := HmacSha256(APassword, ASalt + LCounter);
+  LFirst := RawToBytes(ASalt);
+  SetLength(LFirst, Length(LFirst) + 4);
+  LFirst[High(LFirst) - 3] := 0;
+  LFirst[High(LFirst) - 2] := 0;
+  LFirst[High(LFirst) - 1] := 0;
+  LFirst[High(LFirst)] := 1;
+  LPassword := RawToBytes(APassword);
+  LU := HmacSha256(LPassword, LFirst);
   LBlock := LU;
   for I := 2 to AIterations do
   begin
-    LU := HmacSha256(APassword, DigestToRaw(LU));
+    LU := HmacSha256(LPassword, DigestToBytes(LU));
     for J := 0 to 31 do
       LBlock[J] := LBlock[J] xor LU[J];
   end;
-  Result := BytesToHex(LBlock);
+  Result := DigestToHex(LBlock);
 end;
 
 function HashPassword(const APassword, ASaltHex: string; const AIterations: Integer): string;

@@ -58,8 +58,9 @@ function SplitSqlScript(const AScript: string): TStatementList;
 var
   LTerminator, LCurrent: string;
   LIndex, LLength: Integer;
+  LStatements: TStatementList;
 
-  procedure Flush;
+  procedure FlushStatement;
   var
     LText, LUpper: string;
   begin
@@ -73,12 +74,12 @@ var
       LTerminator := Trim(Copy(LText, 9, MaxInt));
       Exit;
     end;
-    SetLength(Result, Length(Result) + 1);
-    Result[High(Result)] := LText;
+    SetLength(LStatements, Length(LStatements) + 1);
+    LStatements[High(LStatements)] := LText;
   end;
 
 begin
-  SetLength(Result, 0);
+  SetLength(LStatements, 0);
   LTerminator := ';';
   LCurrent := '';
   LIndex := 1;
@@ -112,7 +113,7 @@ begin
     else if Copy(AScript, LIndex, Length(LTerminator)) = LTerminator then
     begin
       Inc(LIndex, Length(LTerminator));
-      Flush;
+      FlushStatement;
     end
     else
     begin
@@ -120,7 +121,8 @@ begin
       Inc(LIndex);
     end;
   end;
-  Flush;
+  FlushStatement;
+  Result := LStatements;
 end;
 
 constructor TMigrator.Create(const ASession: IDbSession; const ALog: TStrings);

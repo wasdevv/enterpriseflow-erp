@@ -51,6 +51,7 @@ type
 implementation
 
 uses
+  {$IFNDEF FPC}System.IOUtils,{$ENDIF}
   EF.Application.Ports, EF.Application.Catalog,
   EF.Domain.Money, EF.Domain.Quantity,
   EF.Infrastructure.Composition, EF.Infrastructure.Database, EF.Infrastructure.Database.Driver,
@@ -60,7 +61,11 @@ uses
 
 function TempDir: string;
 begin
+  {$IFDEF FPC}
   Result := IncludeTrailingPathDelimiter(GetTempDir) + 'ef_' + NewCorrelationId;
+  {$ELSE}
+  Result := IncludeTrailingPathDelimiter(TPath.GetTempPath) + 'ef_' + NewCorrelationId;
+  {$ENDIF}
   ForceDirectories(Result);
 end;
 
@@ -392,7 +397,8 @@ end;
 procedure TReportingTests.CsvEscapesAndHasBom;
 var
   LTable: TDataTable;
-  LCsv: RawByteString;
+  LCsv: TBytes;
+  LBody: RawByteString;
 begin
   SetLength(LTable.Columns, 2);
   LTable.Columns[0] := 'Nome';
@@ -402,8 +408,10 @@ begin
   LTable.Rows[0][0] := 'Cabo; 2,5mm';
   LTable.Rows[0][1] := 'diz "ok"';
   LCsv := DataTableToCsv(LTable);
-  Assert.AreEqual(#$EF#$BB#$BF, Copy(string(LCsv), 1, 3), 'BOM para o Excel');
-  Assert.IsTrue(Pos('"Cabo; 2,5mm";"diz ""ok"""', string(LCsv)) > 0, string(LCsv));
+  Assert.IsTrue((LCsv[0] = $EF) and (LCsv[1] = $BB) and (LCsv[2] = $BF), 'BOM para o Excel');
+  SetLength(LBody, Length(LCsv) - 3);
+  Move(LCsv[3], LBody[1], Length(LBody));
+  Assert.IsTrue(Pos(RawByteString('"Cabo; 2,5mm";"diz ""ok"""'), LBody) > 0, 'Campos com ; e aspas ficam escapados');
 end;
 
 procedure TReportingTests.EveryReadModelQueryRuns;

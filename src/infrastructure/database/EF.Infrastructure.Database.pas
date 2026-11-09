@@ -94,8 +94,8 @@ function PIdOrNull(const AName: string; const AValue: Int64): TDbParam;
 function PTextOrNull(const AName, AValue: string): TDbParam;
 
 { Classifica erro do Firebird pelo código GDS e, como reserva, pelo texto. }
-function ClassifyFirebirdError(const ACode: Int64; const AMessage: string): TDbErrorClass;
-procedure RaiseMappedError(const ACode: Int64; const AMessage: string);
+function ClassifyFirebirdError(const ACode: Integer; const AMessage: string): TDbErrorClass;
+procedure RaiseMappedError(const ACode: Integer; const AMessage: string);
 
 const
   { Tempo máximo esperando um registro bloqueado por outra transação. }
@@ -180,7 +180,7 @@ begin
     Result := P(AName, AValue);
 end;
 
-function ClassifyFirebirdError(const ACode: Int64; const AMessage: string): TDbErrorClass;
+function ClassifyFirebirdError(const ACode: Integer; const AMessage: string): TDbErrorClass;
 var
   LText: string;
 begin
@@ -210,7 +210,7 @@ begin
     Result := dbeOther;
 end;
 
-procedure RaiseMappedError(const ACode: Int64; const AMessage: string);
+procedure RaiseMappedError(const ACode: Integer; const AMessage: string);
 begin
   case ClassifyFirebirdError(ACode, AMessage) of
     dbeConcurrency:

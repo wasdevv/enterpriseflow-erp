@@ -44,7 +44,7 @@ type
   end;
 
 { CSV com ";" e BOM UTF-8: abre com acento correto no Excel em português. }
-function DataTableToCsv(const ATable: TDataTable): RawByteString;
+function DataTableToCsv(const ATable: TDataTable): TBytes;
 procedure SaveDataTableCsv(const ATable: TDataTable; const APath: string);
 
 implementation
@@ -333,8 +333,9 @@ begin
     Result := '"' + StringReplace(Result, '"', '""', [rfReplaceAll]) + '"';
 end;
 
-function DataTableToCsv(const ATable: TDataTable): RawByteString;
+function DataTableToCsv(const ATable: TDataTable): TBytes;
 var
+  LUtf8: RawByteString;
   LBuilder: string;
   LRow, LColumn: Integer;
 begin
@@ -356,18 +357,24 @@ begin
     end;
     LBuilder := LBuilder + #13#10;
   end;
-  Result := #$EF#$BB#$BF + UTF8Encode(LBuilder);
+  LUtf8 := UTF8Encode(LBuilder);
+  SetLength(Result, 3 + Length(LUtf8));
+  Result[0] := $EF;
+  Result[1] := $BB;
+  Result[2] := $BF;
+  if Length(LUtf8) > 0 then
+    Move(LUtf8[1], Result[3], Length(LUtf8));
 end;
 
 procedure SaveDataTableCsv(const ATable: TDataTable; const APath: string);
 var
   LStream: TFileStream;
-  LContent: RawByteString;
+  LContent: TBytes;
 begin
   LContent := DataTableToCsv(ATable);
   LStream := TFileStream.Create(APath, fmCreate);
   try
-    LStream.WriteBuffer(LContent[1], Length(LContent));
+    LStream.WriteBuffer(LContent[0], Length(LContent));
   finally
     LStream.Free;
   end;

@@ -57,12 +57,14 @@ type
   published
     procedure Sha256MatchesNistVectors;
     procedure Pbkdf2MatchesPublishedVectors;
+    procedure PasswordWithAccentsHashesItsUtf8Bytes;
     procedure SaltsAreUnique;
     procedure ConstantTimeEqualsComparesContentAndLength;
   end;
 
   TTextTests = class(TObject)
   published
+    procedure SourceLiteralsAreUtf8;
     procedure JsonEscapesControlCharsAndQuotes;
     procedure JsonBuilderProducesValidObject;
     procedure RedactionMasksSensitiveJsonFields;
@@ -149,7 +151,6 @@ procedure TOrderStateTests.CodesRoundTrip;
 var
   LStatus: TOrderStatus;
 begin
-  Assert.AreEqual('Orçamento', TOrderStateMachine.DisplayName(osDraft));
   for LStatus := Low(TOrderStatus) to High(TOrderStatus) do
     Assert.IsTrue(TOrderStateMachine.FromCode(TOrderStateMachine.ToCode(LStatus)) = LStatus);
 end;
@@ -470,6 +471,12 @@ begin
   Assert.AreEqual('c5e478d59288c841aa530db6845c4c8d962893a001ce4e11a4963873aa98134a', Pbkdf2Sha256Hex('password', 'salt', 4096));
 end;
 
+procedure TCryptoTests.PasswordWithAccentsHashesItsUtf8Bytes;
+begin
+  { Valor conferido com hashlib.pbkdf2_hmac('sha256', 'pão'.encode(), b'sal', 1000). }
+  Assert.AreEqual('a35f096a1541a9f88afabad7dd73065b2775f343fc09cef8e189b166223e803b', HashPassword('pão', 'sal', 1000));
+end;
+
 procedure TCryptoTests.SaltsAreUnique;
 var
   LFirst, LSecond: string;
@@ -488,6 +495,14 @@ begin
 end;
 
 { TTextTests }
+
+procedure TTextTests.SourceLiteralsAreUtf8;
+begin
+  { "ç" ocupa dois bytes: "Orçamento" tem 9 letras e 10 bytes em UTF-8. Falha se um fonte sem
+    BOM for lido como ANSI pelo Delphi, ou se o locale corromper o literal. }
+  Assert.AreEqual(10, Length(RawByteString(UTF8Encode(TOrderStateMachine.DisplayName(osDraft)))));
+  Assert.AreEqual('Orçamento', TOrderStateMachine.DisplayName(osDraft));
+end;
 
 procedure TTextTests.JsonEscapesControlCharsAndQuotes;
 begin

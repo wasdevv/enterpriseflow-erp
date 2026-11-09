@@ -5,4 +5,7 @@
   {$H+}
   {$WARN 5024 OFF}
   {$WARN 5023 OFF}
+  {$WARN 4104 OFF}
+  {$WARN 4105 OFF}
+  {$WARN 5093 OFF}
 {$ENDIF}

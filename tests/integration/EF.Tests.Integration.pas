@@ -42,7 +42,7 @@ uses
   EF.Application.Ports, EF.Application.Outbox, EF.Application.Finance,
   EF.Infrastructure.Composition, EF.Infrastructure.Database, EF.Infrastructure.Database.Driver,
   EF.Infrastructure.Http, EF.Infrastructure.Repositories.Support, EF.Infrastructure.UnitOfWork,
-  EF.Tests.Support, EF.Shared.Text;
+  EF.Tests.Support, EF.Shared.Logging, EF.Shared.Text;
 
 type
   TNoSleep = class(TInterfacedObject, ISleeper)
@@ -344,11 +344,11 @@ begin
     LOtherUow := TUnitOfWork.Create(LOther);
     LOtherUow.StartTransaction;
     try
-      LStart := GetTickCount64;
+      LStart := NowTick;
       LTheirs := LOtherUow.Outbox.ClaimDue(50, Now, Now + 1 / 24);
       for LIndex := 0 to High(LTheirs) do
         Assert.IsTrue(LTheirs[LIndex].Id <> LEvent, 'O segundo worker não pode pegar o mesmo evento');
-      Assert.IsTrue(GetTickCount64 - LStart < 2000, 'SKIP LOCKED pula em vez de esperar o bloqueio');
+      Assert.IsTrue(ElapsedSince(LStart) < 2000, 'SKIP LOCKED pula em vez de esperar o bloqueio');
     finally
       LOtherUow.Rollback;
     end;
