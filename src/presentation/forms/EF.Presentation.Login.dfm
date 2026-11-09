@@ -8,10 +8,13 @@ object LoginForm: TLoginForm
   Position = poScreenCenter
   object lblTitle: TLabel
     Left = 24
-    Top = 18
+    Top = 14
     Width = 250
     Height = 24
     Caption = 'EnterpriseFlow ERP'
+    ParentFont = False
+    Font.Height = -18
+    Font.Style = [fsBold]
   end
   object lblSubtitle: TLabel
     Left = 24
@@ -57,6 +60,8 @@ object LoginForm: TLoginForm
     Width = 330
     Height = 16
     Caption = ''
+    ParentFont = False
+    Font.Color = clRed
   end
   object btnLogin: TButton
     Left = 158

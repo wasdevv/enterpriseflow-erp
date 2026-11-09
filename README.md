@@ -4,14 +4,16 @@ ERP desktop de portfólio para uma distribuidora fictícia de materiais elétric
 
 > **Transparência.** A Distribuidora São Lucas e seus dados são fictícios. Este é um projeto de portfólio, não uma implantação comercial.
 
-> **Estado: ainda não compilado em Delphi.** Foi desenvolvido sem acesso a um compilador Delphi. Regras, SQL, concorrência e telas foram compilados e executados com Free Pascal e LCL, contra um Firebird real. Os adaptadores FireDAC e `TNetHTTPClient`, os `.dproj` e a aparência na VCL estão pendentes. O detalhe está em [docs/verificacao-delphi.md](docs/verificacao-delphi.md).
+> **Estado: ainda não compilado em Delphi.** Foi desenvolvido sem acesso a um compilador Delphi. Regras, SQL, concorrência e telas foram compilados com Free Pascal e LCL e executados em Linux e como `.exe` nativo no Windows, contra um Firebird real. Os adaptadores FireDAC e `TNetHTTPClient`, os `.dproj` e a aparência na VCL estão pendentes. O detalhe está em [docs/verificacao-delphi.md](docs/verificacao-delphi.md).
 
 ## O que está verificado
 
 | Verificação | Resultado | Como repetir |
 |---|---|---|
-| Testes unitários e de integração em Firebird 5.0.4 | 150 passando | `scripts/test.sh` |
-| Roteiro ponta a ponta nas telas, com a LCL em Xvfb | 52 verificações | `scripts/ui-smoke.sh` |
+| Testes unitários e de integração em Firebird 5.0.4, em Linux | 150 passando | `scripts/test.sh` |
+| A mesma suíte como `.exe` nativo no Windows | 150 passando | `scripts/test-windows.sh` |
+| Roteiro ponta a ponta nas telas, em Linux e em controles nativos do Windows | 52 verificações em cada | `scripts/ui-smoke.sh`, `scripts/ui-smoke-windows.sh` |
+| Regras que só o Delphi cobra e ramos exclusivos dele, contra simulações da API | Sem pendência | `scripts/check-delphi-rules.py`, `scripts/typecheck-delphi-paths.py` |
 | Sabotagem: remover uma trava ou regra precisa quebrar um teste | 16 de 16 detectadas | `scripts/mutation-check.py` |
 | Corrida real pela última unidade | 8 threads e 4 processos: um vence, os outros recebem recusa | `ThreadsRacing...`, `ProcessesRacing...` |
 | Índices medidos antes de entrar no schema | 4 adotados, 2 rejeitados | [docs/performance.md](docs/performance.md) |
@@ -89,7 +91,11 @@ efmigrate seed database/seeds/001_demo.sql
 
 ### Em Delphi (Windows)
 
-Abra `EnterpriseFlow.dproj`, compile e execute. Na primeira vez, siga [docs/verificacao-delphi.md](docs/verificacao-delphi.md), porque ajustes são esperados.
+Abra `EnterpriseFlow.dproj`, compile e execute, ou use `scripts/windows/build-delphi.ps1`. Na primeira vez, siga [docs/verificacao-delphi.md](docs/verificacao-delphi.md), porque ajustes são esperados. A edição gratuita deve atender com o Firebird em `localhost`.
+
+### No Windows, sem Delphi
+
+`scripts/package-windows.sh`, rodado no WSL, gera uma pasta com o `.exe` compilado com Free Pascal e LCL. O arquivo `Abrir EnterpriseFlow.bat` sobe o banco de demonstração no WSL e abre o programa.
 
 ### Sem Delphi (Linux)
 
@@ -101,6 +107,8 @@ export LD_LIBRARY_PATH=$HOME/.local/firebird-5/opt/firebird/lib:$LD_LIBRARY_PATH
 ./scripts/ui-smoke.sh ./capturas     # roteiro nas telas, com capturas opcionais
 ./scripts/mutation-check.py          # confere que os testes detectam sabotagem
 ```
+
+Para gerar e rodar `.exe` de Windows a partir do WSL, instale também `fp-units-win-*` e `lazarus-src`, e use `scripts/test-windows.sh` e `scripts/ui-smoke-windows.sh`.
 
 ## Limitações
 
@@ -127,7 +135,8 @@ export LD_LIBRARY_PATH=$HOME/.local/firebird-5/opt/firebird/lib:$LD_LIBRARY_PATH
 - [x] Integração REST simulada (`TNetHTTPClient` ainda não compilado)
 - [x] Relatórios operacionais e financeiros
 - [x] Testes unitários e de integração (com shim; DUnitX real pendente)
-- [ ] Compilar e validar em Delphi
+- [x] Compilar e executar como `.exe` nativo no Windows (Free Pascal e LCL)
+- [ ] Compilar e validar em Delphi (exige licença: [como fazer](docs/verificacao-delphi.md#compilar-em-delphi))
 - [ ] Gravar demonstração
 
 A especificação completa está em [docs/especificacao.md](docs/especificacao.md).

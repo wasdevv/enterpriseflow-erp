@@ -287,7 +287,7 @@ var
 begin
   { O banco ignora espaço à direita ao comparar, então esta falha só aparece no aplicativo. }
   LEnv := NewTestEnv;
-  Assert.AreEqual(0, LEnv.CountRows('SELECT permission_code FROM role_permissions WHERE CHAR_LENGTH(permission_code) <> CHAR_LENGTH(TRIM(permission_code))', []));
+  Assert.AreEqual(0, LEnv.CountRows('SELECT permission_code FROM role_permissions WHERE CHAR_LENGTH(permission_code) <> CHAR_LENGTH(TRIM(permission_code))'));
 end;
 
 procedure TAuthTests.WrongPasswordAndUnknownUserGiveSameMessage;
@@ -465,7 +465,7 @@ var
   LCustomerId: Int64;
 begin
   LEnv := NewTestEnv;
-  LEnv.ExecuteSql('DELETE FROM customers WHERE document = ''52998224725''', []);
+  LEnv.ExecuteSql('DELETE FROM customers WHERE document = ''52998224725''');
   LCustomerId := LEnv.App.Catalog.SaveCustomer(ValidCustomer('529.982.247-25'));
   Assert.AreEqual('52998224725', LEnv.QueryText('SELECT document FROM customers WHERE id = :id', [P('id', LCustomerId)]));
 end;
@@ -551,13 +551,13 @@ begin
   LEnv := NewTestEnv;
   LRaised := False;
   try
-    LEnv.QueryMoney('SELECT SUM(CAST(1.50 AS NUMERIC(18,2))) AS s FROM RDB$DATABASE', []);
+    LEnv.QueryMoney('SELECT SUM(CAST(1.50 AS NUMERIC(18,2))) AS s FROM RDB$DATABASE');
   except
     on E: Exception do
       LRaised := Pos('ilegível', E.Message) > 0;
   end;
   Assert.IsTrue(LRaised, 'Valor ilegível deve falhar, nunca virar zero');
-  Assert.AreEqual('1.50', LEnv.QueryMoney('SELECT CAST(SUM(CAST(1.50 AS NUMERIC(18,2))) AS NUMERIC(18,2)) AS s FROM RDB$DATABASE', []));
+  Assert.AreEqual('1.50', LEnv.QueryMoney('SELECT CAST(SUM(CAST(1.50 AS NUMERIC(18,2))) AS NUMERIC(18,2)) AS s FROM RDB$DATABASE'));
 end;
 
 procedure TReportingTests.UnreadableQuantityFailsInsteadOfBecomingZero;

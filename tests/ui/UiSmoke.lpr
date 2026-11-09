@@ -96,6 +96,9 @@ begin
     FModalSince := 0;
     Exit;
   end;
+  { Já recebeu resultado e está fechando: a próxima ação é para a próxima abertura. }
+  if LForm.ModalResult <> mrNone then
+    Exit;
   if FNextAction > High(FActions) then
   begin
     { Janela que o roteiro não esperava: falha e fecha, em vez de travar a execução. }
@@ -166,20 +169,42 @@ procedure TSmoke.Shot(const AName: string);
 var
   LBitmap: TBitmap;
   LPng: TPortableNetworkGraphic;
+{$IFDEF MSWINDOWS}
+  LIndex: Integer;
+  LForm: TCustomForm;
+{$ELSE}
   LDc: HDC;
+{$ENDIF}
 begin
   if FShots = '' then
     Exit;
   Settle;
-  LBitmap := TBitmap.Create;
   LPng := TPortableNetworkGraphic.Create;
-  try
-    LDc := GetDC(0);
-    try
-      LBitmap.LoadFromDevice(LDc);
-    finally
-      ReleaseDC(0, LDc);
+  {$IFDEF MSWINDOWS}
+  { Só a janela do programa: no Windows, capturar a tela pegaria o que a pessoa está fazendo. }
+  LForm := FMain;
+  for LIndex := 0 to Screen.CustomFormCount - 1 do
+    if (fsModal in Screen.CustomForms[LIndex].FormState) and Screen.CustomForms[LIndex].Visible then
+    begin
+      LForm := Screen.CustomForms[LIndex];
+      Break;
     end;
+  if LForm = nil then
+  begin
+    LPng.Free;
+    Exit;
+  end;
+  LBitmap := LForm.GetFormImage;
+  {$ELSE}
+  LBitmap := TBitmap.Create;
+  LDc := GetDC(0);
+  try
+    LBitmap.LoadFromDevice(LDc);
+  finally
+    ReleaseDC(0, LDc);
+  end;
+  {$ENDIF}
+  try
     LPng.Assign(LBitmap);
     LPng.SaveToFile(IncludeTrailingPathDelimiter(FShots) + AName + '.png');
   finally

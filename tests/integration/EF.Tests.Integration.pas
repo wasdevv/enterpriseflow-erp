@@ -160,7 +160,7 @@ var
   LOrder: Int64;
   LInvoice: TInvoiceResult;
 begin
-  AEnv.ExecuteSql('UPDATE outbox_events SET status = ''SENT'' WHERE status = ''PENDING''', []);
+  AEnv.ExecuteSql('UPDATE outbox_events SET status = ''SENT'' WHERE status = ''PENDING''');
   LOrder := ShippedOrder(AEnv, '10,00');
   LInvoice := AEnv.App.Invoicing.InvoiceOrder(LOrder, Date + 30);
   AKey := 'invoice-issued-' + IntToStr(LInvoice.InvoiceId);
@@ -406,7 +406,7 @@ begin
   ScriptResponses('[{"status":503},{"status":503},{"status":503}]');
   RunWorker(LEnv, NewPublisher(LEnv, NewHttpTransport), 1);
   Assert.AreEqual('DEAD', StatusOfEvent(LEnv, LEvent));
-  Assert.IsTrue(LEnv.CountRows('SELECT id FROM metric_events WHERE metric = ''integration_failed''', []) > 0);
+  Assert.IsTrue(LEnv.CountRows('SELECT id FROM metric_events WHERE metric = ''integration_failed''') > 0);
 end;
 
 procedure TOutboxIntegrationTests.LogsNeverContainTheToken;

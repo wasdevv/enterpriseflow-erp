@@ -20,16 +20,18 @@ if [ ! -x "$FB/bin/firebird" ]; then
     cp -a "$WORK"/tm/usr/lib/x86_64-linux-gnu/libtommath.so.1* "$FB/lib/"
   fi
 fi
+if (exec 3<>"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null; then
+  echo "Firebird ja esta ouvindo em 127.0.0.1:$PORT"
+  exit 0
+fi
 export FIREBIRD="$FB" LD_LIBRARY_PATH="$FB/lib:${LD_LIBRARY_PATH:-}" FIREBIRD_LOCK="$FB/lock" FIREBIRD_TMP="$FB/tmp"
 mkdir -p "$FIREBIRD_LOCK" "$FIREBIRD_TMP" "$HOME/.local/share/enterpriseflow-fb"
 sed -i "s/^#\?\s*RemoteServicePort\s*=.*/RemoteServicePort = $PORT/; s/^#\?\s*RemoteBindAddress\s*=.*/RemoteBindAddress = 127.0.0.1/" "$FB/firebird.conf"
 printf "create or alter user SYSDBA password '%s' using plugin Srp;\ncommit;\nexit;\n" "$PASSWORD" | "$FB/bin/isql" -q -user SYSDBA security.db >/dev/null
-if ! (exec 3<>"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null; then
-  nohup "$FB/bin/firebird" >"$PREFIX/firebird.out" 2>&1 &
-  for _ in $(seq 1 50); do
-    (exec 3<>"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null && break
-    sleep 0.2
-  done
-fi
+nohup "$FB/bin/firebird" >"$PREFIX/firebird.out" 2>&1 &
+for _ in $(seq 1 50); do
+  (exec 3<>"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null && break
+  sleep 0.2
+done
 echo "Firebird $VERSION ouvindo em 127.0.0.1:$PORT"
 echo "Cliente: export LD_LIBRARY_PATH=$FB/lib:\$LD_LIBRARY_PATH"

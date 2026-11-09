@@ -41,9 +41,7 @@ begin
       else
         LResponse := LClient.Post(ARequest.Url, LBody, nil, LHeaders);
     except
-      on E: ENetHTTPClientException do
-        raise EHttpTransportError.Create(E.Message);
-      on E: ENetHTTPException do
+      on E: ENetException do
         raise EHttpTransportError.Create(E.Message);
     end;
     Result.StatusCode := LResponse.StatusCode;

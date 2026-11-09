@@ -100,7 +100,7 @@ begin
   Assert.AreEqual('10/0', LEnv.Balance(LProduct, LWarehouse));
   Assert.AreEqual(0, LEnv.CountRows('SELECT id FROM sales_orders WHERE idempotency_key = :k', [P('k', LKey)]));
   Assert.AreEqual(0, LEnv.CountRows('SELECT id FROM stock_movements WHERE product_id = :p AND movement_type = ''RESERVE''', [P('p', LProduct)]));
-  Assert.IsTrue(LEnv.CountRows('SELECT id FROM metric_events WHERE metric = ''reservation_refused''', []) > 0, 'A recusa precisa sobreviver ao rollback');
+  Assert.IsTrue(LEnv.CountRows('SELECT id FROM metric_events WHERE metric = ''reservation_refused''') > 0, 'A recusa precisa sobreviver ao rollback');
 end;
 
 procedure TStockIntegrationTests.ThreadsRacingForLastUnitNeverOversell;

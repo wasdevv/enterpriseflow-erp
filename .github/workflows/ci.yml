@@ -18,9 +18,17 @@ jobs:
       - name: Instalar compilador, LCL e Xvfb
         run: |
           sudo apt-get update
-          sudo apt-get install -y fpc lcl lcl-gtk2 libgtk2.0-dev xvfb libtommath1
+          sudo apt-get install -y fpc lcl lcl-gtk2 libgtk2.0-dev xvfb libtommath1 \
+            fp-units-win-rtl-3.2.2 fp-units-win-base-3.2.2 fp-units-win-fcl-3.2.2 fp-units-win-db-3.2.2 \
+            fp-units-win-net-3.2.2 fp-units-win-math-3.2.2 fp-units-win-misc-3.2.2
       - name: Conferir BOM dos fontes com acento
         run: ./scripts/normalize-sources.py --check
+      - name: Regras que so o Delphi cobra e coerencia dos projetos
+        run: ./scripts/check-delphi-rules.py
+      - name: Ramos exclusivos de Delphi, contra simulacoes da API
+        run: python3 scripts/typecheck-delphi-paths.py
+      - name: Compilar os testes como .exe de Windows
+        run: ./scripts/build-win64-tests.sh
       - name: Subir Firebird 5
         run: |
           ./scripts/setup-firebird.sh

@@ -30,11 +30,14 @@ type
     function NewWarehouse: Int64;
     procedure AddStock(const AProductId, AWarehouseId: Int64; const AQuantity: string);
     function Balance(const AProductId, AWarehouseId: Int64): string;
-    function CountRows(const ASql: string; const AParams: array of TDbParam): Integer;
+    function CountRows(const ASql: string): Integer; overload;
+    function CountRows(const ASql: string; const AParams: array of TDbParam): Integer; overload;
     function QueryText(const ASql: string; const AParams: array of TDbParam): string;
     { Primeira coluna como dinheiro, no formato invariante: 12.50 }
-    function QueryMoney(const ASql: string; const AParams: array of TDbParam): string;
-    procedure ExecuteSql(const ASql: string; const AParams: array of TDbParam);
+    function QueryMoney(const ASql: string): string; overload;
+    function QueryMoney(const ASql: string; const AParams: array of TDbParam): string; overload;
+    procedure ExecuteSql(const ASql: string); overload;
+    procedure ExecuteSql(const ASql: string; const AParams: array of TDbParam); overload;
     function Key: string;
   end;
 
@@ -85,10 +88,13 @@ type
     function NewWarehouse: Int64;
     procedure AddStock(const AProductId, AWarehouseId: Int64; const AQuantity: string);
     function Balance(const AProductId, AWarehouseId: Int64): string;
-    function CountRows(const ASql: string; const AParams: array of TDbParam): Integer;
+    function CountRows(const ASql: string): Integer; overload;
+    function CountRows(const ASql: string; const AParams: array of TDbParam): Integer; overload;
     function QueryText(const ASql: string; const AParams: array of TDbParam): string;
-    function QueryMoney(const ASql: string; const AParams: array of TDbParam): string;
-    procedure ExecuteSql(const ASql: string; const AParams: array of TDbParam);
+    function QueryMoney(const ASql: string): string; overload;
+    function QueryMoney(const ASql: string; const AParams: array of TDbParam): string; overload;
+    procedure ExecuteSql(const ASql: string); overload;
+    procedure ExecuteSql(const ASql: string; const AParams: array of TDbParam); overload;
     function Key: string;
   end;
 
@@ -350,6 +356,30 @@ begin
     FDb.Rollback;
     raise;
   end;
+end;
+
+function TTestEnv.CountRows(const ASql: string): Integer;
+var
+  LNone: array of TDbParam;
+begin
+  LNone := nil;
+  Result := CountRows(ASql, LNone);
+end;
+
+function TTestEnv.QueryMoney(const ASql: string): string;
+var
+  LNone: array of TDbParam;
+begin
+  LNone := nil;
+  Result := QueryMoney(ASql, LNone);
+end;
+
+procedure TTestEnv.ExecuteSql(const ASql: string);
+var
+  LNone: array of TDbParam;
+begin
+  LNone := nil;
+  ExecuteSql(ASql, LNone);
 end;
 
 function TTestEnv.CountRows(const ASql: string; const AParams: array of TDbParam): Integer;
