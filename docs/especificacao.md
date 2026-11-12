@@ -304,4 +304,4 @@ Não inventar percentuais de ganho, volume de produção ou resultados de client
 
 ## Licença
 
-Defina uma licença antes de publicar o repositório.
+Defina uma licença antes de publicar o repositório. Escolhida: [MIT](../LICENSE).

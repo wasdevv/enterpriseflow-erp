@@ -10,6 +10,7 @@
 ![FireDAC](https://img.shields.io/badge/acesso%20a%20dados-FireDAC-1f6feb)
 ![Testes](https://img.shields.io/badge/testes-150%20passando-2ea44f)
 ![Windows](https://img.shields.io/badge/.exe-Windows%20x64-0078D4)
+[![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-yellow)](LICENSE)
 
 </div>
 
@@ -209,7 +210,6 @@ Com `fp-units-win-*` e `lazarus-src` instalados, `scripts/test-windows.sh` e `sc
 - Relatórios em tela e CSV, sem layout de impressão.
 - O serviço externo é simulado, e a fatura é interna, sem nota fiscal.
 - Edição de cadastro não detecta alteração simultânea: vence o último a salvar, com o histórico na auditoria.
-- Sem licença definida, por isso o repositório é privado.
 
 ## Roadmap
 
@@ -224,4 +224,4 @@ Com `fp-units-win-*` e `lazarus-src` instalados, `scripts/test-windows.sh` e `sc
 - [ ] Compilar e validar em Delphi ([como](docs/verificacao-delphi.md#compilar-em-delphi))
 - [ ] Gravar demonstração
 
-<sub>A especificação de partida está em [docs/especificacao.md](docs/especificacao.md).</sub>
+<sub>A especificação de partida está em [docs/especificacao.md](docs/especificacao.md). Licença [MIT](LICENSE).</sub>
